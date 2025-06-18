@@ -1,6 +1,6 @@
 # Compiler settings
 CXX = g++
-CXXFLAGS = -std=c++17 -Wall
+CXXFLAGS = -std=c++17 -Wall -I$(INC_DIR)
 
 # Directories
 SRC_DIR = src
@@ -15,14 +15,18 @@ EXEC = $(BUILD_DIR)/minigit
 # Default target
 all: $(BUILD_DIR) $(EXEC)
 
+# Create build directory if it doesn't exist
 $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
 
+# Compile .cpp files into .o object files
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp
-	$(CXX) $(CXXFLAGS) -I$(INC_DIR) -c $< -o $@
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
+# Link all object files into final executable
 $(EXEC): $(OBJECTS)
 	$(CXX) $(CXXFLAGS) -o $@ $^
 
+# Clean build directory
 clean:
 	rm -rf $(BUILD_DIR)

@@ -13,22 +13,22 @@ void initMiniGit() {
 
     if (!fs::exists(minigit)) {
         fs::create_directory(minigit);
-        SetFileAttributesA(minigit.c_str(), FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM);
+        SetFileAttributesA(minigit.c_str(), FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM); //make it hidden and system
 
-        // Create the required internal folders
+      
         fs::create_directories(minigit + "/objects");
         fs::create_directories(minigit + "/refs/heads");
 
-        // Create HEAD file and point to main branch
+      
         ofstream headFile(minigit + "/HEAD");
-        headFile << "ref: refs/heads/main" << endl;
+        headFile << "ref: refs/heads/main" << endl; //default branch is main
         headFile.close();
 
-        // Create index file (empty)
+        
         ofstream indexFile(minigit + "/index");
         indexFile.close();
 
-        // Create the main branch file (empty for now)
+        // main branch file (empty for now)
         ofstream mainBranch(minigit + "/refs/heads/main");
         mainBranch.close();
 
