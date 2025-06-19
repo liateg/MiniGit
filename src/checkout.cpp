@@ -1,7 +1,9 @@
-#include "../include/checkout.hpp"
+
 #include <fstream>
 #include <iostream>
 #include <filesystem>
+#include <string>
+#include "checkout.hpp"
 namespace fs = std::filesystem;
 void checkout(const std::string& name) {
     std::string commitHash;

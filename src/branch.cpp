@@ -1,6 +1,8 @@
-#include "branch.hpp"
+
 #include <fstream>
 #include <iostream>
+#include <string>
+#include "branch.hpp"
 void createBranch(const std::string& branchName) {
     std::ifstream headFile(".minigit/HEAD");
     std::string currentCommit;
