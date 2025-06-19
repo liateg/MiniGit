@@ -5,6 +5,7 @@
 #include <unordered_map>
 #include "add.hpp"
 #include "hash.hpp"
+#include "utils.hpp"  // for getCurrentBranch()
 
 namespace fs = std::filesystem;
 using namespace std;
@@ -84,7 +85,7 @@ void addFileToStaging(const string& filename) {
     IndexEntry newEntry;
     newEntry.lastCommitHash = hash;
     newEntry.stagedForRemoval = false;
-    newEntry.branchName = "main";  // Default for now
+    newEntry.branchName = getCurrentBranch();  // get current branch dynamically
     indexMap[filename] = newEntry;
 
     writeIndex(indexMap);
