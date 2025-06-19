@@ -13,6 +13,7 @@
 #include "commit.hpp"  
 #include "log.hpp"
 #include "checkout.hpp"
+#include "merge.hpp"
 
 using namespace std;
 
@@ -85,7 +86,14 @@ else if (command == "checkout") {
     }
     string target = argv[2];
     checkout(target);
+}else if (command == "merge") {
+    if (argc < 3) {
+        cerr << "Usage: merge <branch-name>\n";
+        return 1;
+    }
+    mergeBranch(argv[2]);
 }
+
 
 else {
         cerr << "Unknown command: " << command << endl;

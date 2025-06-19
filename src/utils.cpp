@@ -3,7 +3,41 @@
 #include "utils.hpp"
 #include <fstream>
 #include <iostream>
-#include <filesystem>
+#include <unordered_map>
+#include <string>
+#include <sstream>
+
+
+std::unordered_map<std::string, std::string> getCommitSnapshot(const std::string& commitHash) {
+    std::unordered_map<std::string, std::string> snapshot;
+    std::ifstream file(".minigit/objects/" + commitHash);
+    
+    if (!file.is_open()) {
+        std::cerr << "Error: Cannot open commit file " << commitHash << "\n";
+        return snapshot;
+    }
+
+    std::string line;
+    bool blobsSection = false;
+
+    while (std::getline(file, line)) {
+        if (line == "blobs:") {
+            blobsSection = true;
+            continue;
+        }
+
+        if (blobsSection && !line.empty()) {
+            std::istringstream iss(line);
+            std::string filename, blobHash;
+            if (iss >> filename >> blobHash) {
+                snapshot[filename] = blobHash;
+            }
+        }
+    }
+
+    return snapshot;
+}
+
 std::string getCurrentBranch() {
     std::ifstream head(".minigit/HEAD");
     if (!head) {
