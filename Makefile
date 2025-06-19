@@ -30,3 +30,6 @@ $(EXEC): $(OBJECTS)
 # Clean build directory
 clean:
 	rm -rf $(BUILD_DIR)
+# Link all object files into final executable
+$(EXEC): $(OBJECTS)
+	$(CXX) $(CXXFLAGS) -o $@ $^ -lstdc++fs
