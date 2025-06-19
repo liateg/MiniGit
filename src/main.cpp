@@ -64,14 +64,6 @@ int main(int argc, char* argv[]) {
     
 
 
-}else if (command == "diff") {
-    if (argc < 4) {
-        cerr << "Error: Usage is 'diff <commit1> <commit2>'\n";
-        return 1;
-    }
-    string commit1 = argv[2];
-    string commit2 = argv[3];
-    diffCommits(commit1, commit2);
 }else if (command == "branch") {
     if (argc < 3) {
         std::cerr << "Usage: branch <branch-name>\n";
@@ -92,6 +84,13 @@ else if (command == "checkout") {
         return 1;
     }
     mergeBranch(argv[2]);
+}
+else if (command == "diff") {
+    if (argc < 4) {
+        std::cerr << "Usage: diff <commit1> <commit2>\n";
+        return 1;
+    }
+    diffCommits(argv[2], argv[3]);
 }
 
 
