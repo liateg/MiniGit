@@ -1,96 +1,100 @@
 #include "diff.hpp"
-#include <iostream>
 #include <fstream>
+#include <iostream>
 #include <sstream>
-#include <filesystem>
+#include <string>
 #include <unordered_map>
+#include <filesystem>
 #include <vector>
 
 namespace fs = std::filesystem;
 using namespace std;
 
-// Reads blob content (file) line by line into a vector
-vector<string> readBlobLines(const string& hash) {
-    vector<string> lines;
-    ifstream file(".minigit/objects/" + hash);
-    if (!file) return lines;
-
-    string line;
-    while (getline(file, line)) {
-        lines.push_back(line);
+// Read the snapshot section of a commit and return map of filename -> blob hash
+unordered_map<string, string> readCommitSnapshot(const string& commitHash) {
+    unordered_map<string, string> snapshot;
+    ifstream file(".minigit/objects/" + commitHash);
+    if (!file) {
+        cerr << "Error: Could not open commit object: " << commitHash << endl;
+        return snapshot;
     }
 
+    string line;
+    bool inBlobsSection = false;
+    while (getline(file, line)) {
+        if (line == "blobs:") {
+            inBlobsSection = true;
+            continue;
+        }
+        if (inBlobsSection && !line.empty()) {
+            istringstream iss(line);
+            string filename, blobHash;
+            iss >> filename >> blobHash;
+            snapshot[filename] = blobHash;
+        }
+    }
+    return snapshot;
+}
+
+// Read blob content from .minigit/objects/<blobHash>
+vector<string> readBlobLines(const string& blobHash) {
+    vector<string> lines;
+    ifstream blobFile(".minigit/objects/" + blobHash);
+    if (!blobFile) return lines;
+
+    string line;
+    while (getline(blobFile, line)) {
+        lines.push_back(line);
+    }
     return lines;
 }
 
-// Parses the commit file to get a map of filename -> hash
-unordered_map<string, string> parseCommitFiles(const string& commitHash) {
-    unordered_map<string, string> fileMap;
-    ifstream file(".minigit/objects/" + commitHash);
-    if (!file) return fileMap;
+void diffCommits(const string& commit1, const string& commit2) {
+    unordered_map<string, string> snapshot1 = readCommitSnapshot(commit1);
+    unordered_map<string, string> snapshot2 = readCommitSnapshot(commit2);
 
-    string line;
-    while (getline(file, line)) {
-        if (line.rfind("file: ", 0) == 0) {
-            stringstream ss(line.substr(6));
-            string filename, hash;
-            ss >> filename >> hash;
-            fileMap[filename] = hash;
+    cout << "Comparing commit " << commit1 << " with " << commit2 << "...\n";
+
+    unordered_map<string, bool> printed;
+
+    // Check for modified or removed files
+    for (const auto& [filename, hash1] : snapshot1) {
+        printed[filename] = true;
+
+        if (snapshot2.find(filename) == snapshot2.end()) {
+            cout << "File removed: " << filename << "\n";
+            continue;
         }
-    }
 
-    return fileMap;
-}
+        string hash2 = snapshot2[filename];
+        if (hash1 != hash2) {
+            cout << "Modified file: " << filename << "\n";
 
-// Basic line-by-line diff for changed files
-void diffLines(const vector<string>& lines1, const vector<string>& lines2) {
-    size_t maxLines = max(lines1.size(), lines2.size());
-    for (size_t i = 0; i < maxLines; ++i) {
-        string a = (i < lines1.size()) ? lines1[i] : "";
-        string b = (i < lines2.size()) ? lines2[i] : "";
+            vector<string> lines1 = readBlobLines(hash1);
+            vector<string> lines2 = readBlobLines(hash2);
 
-        if (a != b) {
-            if (!a.empty()) cout << "- " << a << "\n";
-            if (!b.empty()) cout << "+ " << b << "\n";
-        }
-    }
-}
+            size_t maxLines = max(lines1.size(), lines2.size());
+            for (size_t i = 0; i < maxLines; ++i) {
+                string l1 = (i < lines1.size()) ? lines1[i] : "";
+                string l2 = (i < lines2.size()) ? lines2[i] : "";
 
-// Main diff driver
-void diffCommits(const string& commit1Hash, const string& commit2Hash) {
-    cout << "Diffing commits:\n" << commit1Hash << "\n" << commit2Hash << "\n";
-
-    auto files1 = parseCommitFiles(commit1Hash);
-    auto files2 = parseCommitFiles(commit2Hash);
-
-    unordered_map<string, bool> visited;
-
-    for (const auto& [filename, hash2] : files2) {
-        visited[filename] = true;
-
-        if (files1.find(filename) == files1.end()) {
-            // New file in commit2
-            cout << "File added: " << filename << "\n";
-            auto lines = readBlobLines(hash2);
-            for (const auto& line : lines) cout << "+ " << line << "\n";
-        } else {
-            // File exists in both: check for changes
-            const string& hash1 = files1[filename];
-            if (hash1 != hash2) {
-                cout << "Changes in file: " << filename << "\n";
-                auto lines1 = readBlobLines(hash1);
-                auto lines2 = readBlobLines(hash2);
-                diffLines(lines1, lines2);
+                if (l1 != l2) {
+                    cout << " - " << l1 << "\n";
+                    cout << " + " << l2 << "\n";
+                }
             }
         }
     }
 
-    for (const auto& [filename, hash1] : files1) {
-        if (!visited[filename]) {
-            // File deleted in commit2
-            cout << "File removed: " << filename << "\n";
-            auto lines = readBlobLines(hash1);
-            for (const auto& line : lines) cout << "- " << line << "\n";
+    // Check for newly added files
+    for (const auto& [filename, hash2] : snapshot2) {
+        if (printed.find(filename) == printed.end()) {
+            cout << "New file added: " << filename << "\n";
+
+            vector<string> lines = readBlobLines(hash2);
+            for (const auto& line : lines) {
+                cout << " + " << line << "\n";
+            }
         }
     }
 }

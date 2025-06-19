@@ -3,7 +3,6 @@
 
 #include <string>
 
-// Compares two commits and shows the difference
-void diffCommits(const std::string& commit1Hash, const std::string& commit2Hash);
+void diffCommits(const std::string& commit1, const std::string& commit2);
 
 #endif

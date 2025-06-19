@@ -1,6 +1,0 @@
-commit: 8c60d7b66a80afb40d3fe6a2864ebfe76fc12b6a
-parent: 0000000000000000000000000000000000000000
-timestamp: Thu Jun 19 22:14:27 2025
-message: new hash
-blobs:
-test/file1.txt fcc714469d013b508968eb7a7bea9782832f76f0

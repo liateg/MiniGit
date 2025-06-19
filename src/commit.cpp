@@ -82,66 +82,73 @@ void updateBranchRef(const string& commitHash) {
 }
 
 // Main commit creation logic
-void createCommit(const string& message,
-                  const unordered_map<string, IndexEntry>& indexMap) {
+void createcommit(const string& message,
+                  unordered_map<string, IndexEntry>& indexMap) {
     string timestamp = getCurrentTimestamp();
     string branch = getCurrentBranch();
     string parentHash = getParentHash(branch);
 
-    // ✅ Check if there's anything to commit
-    bool hasChanges = false;
-    for (const auto& [_, entry] : indexMap) {
+    unordered_map<string, string> snapshot;  // filename → blob hash
+    string totalContent;
+    bool hasRealChanges = false;
+
+    // 1. Build snapshot and check for actual changes
+    for (auto& [filename, entry] : indexMap) {
         if (entry.stagedForRemoval) {
-            hasChanges = true;
-            break;
+            hasRealChanges = true;
+            continue;
         }
 
-        // Compare current hash with last committed hash
-        if (entry.currentHash != entry.lastCommitHash) {
-            hasChanges = true;
-            break;
+        ifstream file(filename);
+        if (!file) {
+            cerr << "Error: Could not open file '" << filename << "'\n";
+            continue;
         }
+
+        string content((istreambuf_iterator<char>(file)), istreambuf_iterator<char>());
+        string blobHash = computeHash(content);
+        snapshot[filename] = blobHash;
+
+        if (blobHash != entry.lastCommitHash) {
+            hasRealChanges = true;
+            entry.lastCommitHash = blobHash;
+
+            // Save blob if not already exists
+            fs::path blobPath = ".minigit/objects/" + blobHash;
+            if (!fs::exists(blobPath)) {
+                ofstream out(blobPath);
+                out << content;
+            }
+        }
+
+        totalContent += filename + content;
     }
 
-    if (!hasChanges) {
-        cout << "Nothing to commit. No staged changes.\n";
+    // 2. Prevent empty commit
+    if (!hasRealChanges) {
+        cout << "No changes to commit.\n";
         return;
     }
 
-    // ✅ Build total content for hashing (file contents + metadata)
-    string totalContent;
-    for (const auto& [filename, entry] : indexMap) {
-        if (!entry.stagedForRemoval) {
-            ifstream file(filename);
-            string content((istreambuf_iterator<char>(file)), istreambuf_iterator<char>());
-            totalContent += filename + content;
-        }
-    }
-
-    totalContent += message + timestamp + parentHash;
-    totalContent += to_string(chrono::system_clock::now().time_since_epoch().count());  // Add randomness
-
+    // 3. Generate commit hash
+    totalContent += message + timestamp + parentHash + to_string(chrono::system_clock::now().time_since_epoch().count());
     string commitHash = computeHash(totalContent);
 
-    // ✅ Create commit
+    // 4. Create commit object and metadata
     createCommitObject(commitHash);
     writeCommitMetadata(commitHash, message, parentHash, timestamp);
-    writeCommitSnapshot(commitHash, indexMap);
-    updateBranchRef(commitHash);
 
-    cout << "✅ Commit created successfully with hash: " << commitHash << endl;
-
-    // ✅ Update index map to reflect committed state
-    unordered_map<string, IndexEntry> newIndex;
-    for (const auto& [filename, entry] : indexMap) {
-        if (!entry.stagedForRemoval) {
-            IndexEntry updated = entry;
-            updated.lastCommitHash = entry.currentHash;  // Update to committed version
-            updated.stagedForRemoval = false;            // Clear removal flag
-            newIndex[filename] = updated;
-        }
-        // Else: remove file from index (it was deleted)
+    // 5. Write blob references (snapshot)
+    fs::path commitPath = ".minigit/objects/" + commitHash;
+    ofstream commitFile(commitPath, ios::app);
+    for (const auto& [filename, blobHash] : snapshot) {
+        commitFile << filename << " " << blobHash << "\n";
     }
+    commitFile.close();
 
-    writeIndex(newIndex);
+    // 6. Update HEAD and write index
+    updateBranchRef(commitHash);
+    writeIndex(indexMap);
+
+    cout << "✅ Commit created: " << commitHash << "\n";
 }

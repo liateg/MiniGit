@@ -25,7 +25,8 @@ void writeCommitMetadata(const std::string& commitHash, const std::string& messa
 void writeCommitSnapshot(const std::string& commitHash,
                          const std::unordered_map<std::string, IndexEntry>& indexMap);
 void updateBranchRef(const std::string& commitHash);
-void createCommit(const std::string& message,
-                  const std::unordered_map<std::string, IndexEntry>& indexMap);
+
+void createcommit(const std::string& message,
+                  std::unordered_map<std::string, IndexEntry>& indexMap);
 
 #endif  // COMMIT_HPP

@@ -6,11 +6,13 @@
 #include <unordered_map>
 #include "init.hpp"
 #include "add.hpp"
-#include "diff.hpp" 
+#include "diff.hpp"
+#include "branch.hpp" 
 
 
 #include "commit.hpp"  
 #include "log.hpp"
+#include "checkout.hpp"
 
 using namespace std;
 
@@ -54,7 +56,7 @@ int main(int argc, char* argv[]) {
 
         string message = argv[3];
         auto indexMap = parseIndex();
-        createCommit(message, indexMap);
+        createcommit(message, indexMap);
     }else if (command == "log") {
  
    handleLog();
@@ -69,7 +71,22 @@ int main(int argc, char* argv[]) {
     string commit1 = argv[2];
     string commit2 = argv[3];
     diffCommits(commit1, commit2);
+}else if (command == "branch") {
+    if (argc < 3) {
+        std::cerr << "Usage: branch <branch-name>\n";
+        return 1;
+    }
+    createBranch(argv[2]);
 }
+else if (command == "checkout") {
+    if (argc < 3) {
+        cerr << "Usage: checkout <branch-name|commit-hash>\n";
+        return 1;
+    }
+    string target = argv[2];
+    checkout(target);
+}
+
 else {
         cerr << "Unknown command: " << command << endl;
         printUsage();
