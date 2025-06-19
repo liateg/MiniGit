@@ -1,9 +1,8 @@
 #include <exception>
-
 #include "commit.hpp"
 #include "add.hpp"       // for IndexEntry and index parsing
-#include "hash.hpp"      // for computeSHA1()
-#include "utils.hpp" 
+#include "hash.hpp"      // for computeHash()
+#include "utils.hpp"
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -11,44 +10,33 @@
 #include <chrono>
 #include <ctime>
 
-
 namespace fs = std::filesystem;
 using namespace std;
 
 // Get the current timestamp
 string getCurrentTimestamp() {
-    // TODO: implement
-       auto now = chrono::system_clock::now();
+    auto now = chrono::system_clock::now();
     time_t now_c = chrono::system_clock::to_time_t(now);
     string ts = ctime(&now_c); 
-ts.pop_back(); // remove newline
-return ts;
-
+    ts.pop_back(); // remove newline
+    return ts;
 }
 
-
-
-
-
-
-
-
-// Create a new commit directory 
+// Create a new commit file in objects directory
 void createCommitObject(const string& commitHash) {
     fs::path commitPath = ".minigit/objects/" + commitHash;
     ofstream commitFile(commitPath);
     if (!commitFile) {
         cerr << "Error: Could not create commit object file.\n";
     }
-    commitFile.close();  
+    commitFile.close();
 }
 
-
-// Write metadata (message, timestamp, parent) to commit object
+// Write metadata to commit object
 void writeCommitMetadata(const string& commitHash, const string& message,
                          const string& parentHash, const string& timestamp) {
     fs::path commitPath = ".minigit/objects/" + commitHash;
-    ofstream commitFile(commitPath, ios::app);  // Append mode
+    ofstream commitFile(commitPath, ios::app);
     if (!commitFile) {
         cerr << "Error: Could not open commit file for writing.\n";
         return;
@@ -59,17 +47,14 @@ void writeCommitMetadata(const string& commitHash, const string& message,
     commitFile << "timestamp: " << timestamp << "\n";
     commitFile << "message: " << message << "\n";
     commitFile << "blobs:\n";
-
     commitFile.close();
 }
 
-
-
-// Write snapshot of filenames and hashes
+// Write snapshot of filenames and blob hashes
 void writeCommitSnapshot(const string& commitHash,
                          const unordered_map<string, IndexEntry>& indexMap) {
     fs::path commitPath = ".minigit/objects/" + commitHash;
-    ofstream commitFile(commitPath, ios::app);  // Append to existing metadata
+    ofstream commitFile(commitPath, ios::app);
     if (!commitFile) {
         cerr << "Error: Could not open commit file to write snapshot.\n";
         return;
@@ -77,16 +62,15 @@ void writeCommitSnapshot(const string& commitHash,
 
     for (const auto& [filename, entry] : indexMap) {
         if (!entry.stagedForRemoval) {
-            commitFile << filename << " " << entry.currentHash << "\n";
+            commitFile << filename << " " << entry.lastCommitHash << "\n";
         }
     }
 
     commitFile.close();
 }
 
-
-// Update branch reference to point to new commit
-void updateBranchRef(const std::string& commitHash) {
+// Update HEAD to point to latest commit
+void updateBranchRef(const string& commitHash) {
     string branch = getCurrentBranch();
     ofstream branchFile(".minigit/refs/heads/" + branch);
     if (!branchFile) {
@@ -97,23 +81,36 @@ void updateBranchRef(const std::string& commitHash) {
     branchFile.close();
 }
 
-
-// High-level commit function
-void createCommit(const std::string& message,
-                  const std::unordered_map<std::string, IndexEntry>& indexMap) {
+// Main commit creation logic
+void createCommit(const string& message,
+                  const unordered_map<string, IndexEntry>& indexMap) {
     string timestamp = getCurrentTimestamp();
     string branch = getCurrentBranch();
     string parentHash = getParentHash(branch);
 
-    // Create unique hash for commit
-    string preHashData = message + timestamp + parentHash + branch;
-    string commitHash = computeHash(preHashData);
+    // Ensure commit hash includes file content + metadata + randomness
+    string totalContent;
+    for (const auto& [filename, entry] : indexMap) {
+        if (!entry.stagedForRemoval) {
+            ifstream file(filename);
+            string content((istreambuf_iterator<char>(file)), istreambuf_iterator<char>());
+            totalContent += filename + content;
+        }
+    }
 
+    // Add commit message, time, parent, and randomness
+    totalContent += message + timestamp + parentHash;
+    totalContent += to_string(chrono::system_clock::now().time_since_epoch().count());  // Randomized salt
+
+    // Final commit hash
+    string commitHash = computeHash(totalContent);
+
+    // 🔧 Create the commit object
     createCommitObject(commitHash);
     writeCommitMetadata(commitHash, message, parentHash, timestamp);
     writeCommitSnapshot(commitHash, indexMap);
     updateBranchRef(commitHash);
 
-    cout << "Commit created successfully with hash: " << commitHash << endl;
+    cout << "Commit created successfully with hash: " << commitHash <<endl;
+    
 }
-

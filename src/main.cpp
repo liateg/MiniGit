@@ -6,6 +6,9 @@
 #include <unordered_map>
 #include "init.hpp"
 #include "add.hpp"
+#include "diff.hpp" 
+
+
 #include "commit.hpp"  
 #include "log.hpp"
 
@@ -19,6 +22,7 @@ void printUsage() {
     cout << "  add <filename>        Add file to staging area" << endl;
     cout << "  commit -m <message>   Commit staged changes" << endl;
     cout << "  log                   Show commit history" << endl;
+    cout << "  checkout <branch|commit>   Switch to branch or commit" << endl;
 }
 
 int main(int argc, char* argv[]) {
@@ -57,9 +61,16 @@ int main(int argc, char* argv[]) {
     
 
 
+}else if (command == "diff") {
+    if (argc < 4) {
+        cerr << "Error: Usage is 'diff <commit1> <commit2>'\n";
+        return 1;
+    }
+    string commit1 = argv[2];
+    string commit2 = argv[3];
+    diffCommits(commit1, commit2);
 }
-
-    else {
+else {
         cerr << "Unknown command: " << command << endl;
         printUsage();
         return 1;

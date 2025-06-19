@@ -87,7 +87,7 @@ void addFileToStaging(const string& filename) {
     newEntry.lastCommitHash = hash;
     newEntry.stagedForRemoval = false;
    newEntry.branchName = getCurrentBranch();
-  // Default for now
+  
     indexMap[filename] = newEntry;
 
     writeIndex(indexMap);
