@@ -88,7 +88,27 @@ void createCommit(const string& message,
     string branch = getCurrentBranch();
     string parentHash = getParentHash(branch);
 
-    // Ensure commit hash includes file content + metadata + randomness
+    // ✅ Check if there's anything to commit
+    bool hasChanges = false;
+    for (const auto& [_, entry] : indexMap) {
+        if (entry.stagedForRemoval) {
+            hasChanges = true;
+            break;
+        }
+
+        // Compare current hash with last committed hash
+        if (entry.currentHash != entry.lastCommitHash) {
+            hasChanges = true;
+            break;
+        }
+    }
+
+    if (!hasChanges) {
+        cout << "Nothing to commit. No staged changes.\n";
+        return;
+    }
+
+    // ✅ Build total content for hashing (file contents + metadata)
     string totalContent;
     for (const auto& [filename, entry] : indexMap) {
         if (!entry.stagedForRemoval) {
@@ -98,19 +118,30 @@ void createCommit(const string& message,
         }
     }
 
-    // Add commit message, time, parent, and randomness
     totalContent += message + timestamp + parentHash;
-    totalContent += to_string(chrono::system_clock::now().time_since_epoch().count());  // Randomized salt
+    totalContent += to_string(chrono::system_clock::now().time_since_epoch().count());  // Add randomness
 
-    // Final commit hash
     string commitHash = computeHash(totalContent);
 
-    // 🔧 Create the commit object
+    // ✅ Create commit
     createCommitObject(commitHash);
     writeCommitMetadata(commitHash, message, parentHash, timestamp);
     writeCommitSnapshot(commitHash, indexMap);
     updateBranchRef(commitHash);
 
-    cout << "Commit created successfully with hash: " << commitHash <<endl;
-    
+    cout << "✅ Commit created successfully with hash: " << commitHash << endl;
+
+    // ✅ Update index map to reflect committed state
+    unordered_map<string, IndexEntry> newIndex;
+    for (const auto& [filename, entry] : indexMap) {
+        if (!entry.stagedForRemoval) {
+            IndexEntry updated = entry;
+            updated.lastCommitHash = entry.currentHash;  // Update to committed version
+            updated.stagedForRemoval = false;            // Clear removal flag
+            newIndex[filename] = updated;
+        }
+        // Else: remove file from index (it was deleted)
+    }
+
+    writeIndex(newIndex);
 }
