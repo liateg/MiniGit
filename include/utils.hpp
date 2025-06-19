@@ -3,6 +3,9 @@
 
 #include <string>
 
-std::string getCurrentBranch();
+using namespace std;
+
+string getCurrentBranch();
+string getParentHash(const string& cbranch);
 
 #endif

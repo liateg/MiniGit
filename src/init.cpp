@@ -1,3 +1,5 @@
+#include <exception>
+
 #include <windows.h> //for setting the minigit hidden
 #include <iostream>
 #include <fstream>         // For file creation

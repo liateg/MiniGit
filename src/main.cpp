@@ -1,19 +1,24 @@
+#include <exception>
+
 #include <iostream>
 #include <string>
 #include <fstream>
 #include <unordered_map>
 #include "init.hpp"
 #include "add.hpp"
-#include "commit.hpp"  // <-- NEW
+#include "commit.hpp"  
+#include "log.hpp"
 
 using namespace std;
+
 
 void printUsage() {
     cout << "Usage: minigit <command> [options]" << endl;
     cout << "Available commands:" << endl;
     cout << "  init                  Initialize repository" << endl;
     cout << "  add <filename>        Add file to staging area" << endl;
-    cout << "  commit -m <message>   Create a new commit" << endl;  // <-- NEW
+    cout << "  commit -m <message>   Commit staged changes" << endl;
+    cout << "  log                   Show commit history" << endl;
 }
 
 int main(int argc, char* argv[]) {
@@ -46,7 +51,14 @@ int main(int argc, char* argv[]) {
         string message = argv[3];
         auto indexMap = parseIndex();
         createCommit(message, indexMap);
-    }
+    }else if (command == "log") {
+ 
+   handleLog();
+    
+
+
+}
+
     else {
         cerr << "Unknown command: " << command << endl;
         printUsage();

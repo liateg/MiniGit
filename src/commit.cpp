@@ -1,3 +1,5 @@
+#include <exception>
+
 #include "commit.hpp"
 #include "add.hpp"       // for IndexEntry and index parsing
 #include "hash.hpp"      // for computeSHA1()
@@ -8,6 +10,7 @@
 #include <filesystem>
 #include <chrono>
 #include <ctime>
+
 
 namespace fs = std::filesystem;
 using namespace std;
@@ -27,24 +30,7 @@ return ts;
 
 
 
-// Get the parent commit hash from the current branch
-string getParentHash(const string& cbranch) {
-    ifstream branch(".minigit/refs/heads/" + cbranch);
-    if (!branch) {
-        cerr << "Error: Could not open .minigit/refs/heads/" << cbranch << "\n";
-        return string(40, '0');
-    }
 
-    string line;
-    getline(branch, line); 
-    branch.close();
-
-    if (line.empty()) {
-        return string(40, '0');  // 40-char zero string all 0, the hash is 40 chars so when its empty its 40 os
-    } else {
-        return line;
-    }
-}
 
 
 // Create a new commit directory 
