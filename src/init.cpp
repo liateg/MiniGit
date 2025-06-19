@@ -1,4 +1,6 @@
-#include <windows.h> //for setting the minigit hidden
+#ifdef _WIN32
+#include <windows.h>
+#endif //for setting the minigit hidden
 #include <iostream>
 #include <fstream>         // For file creation
 #include <filesystem>      // For directory creation (C++17 and above)
@@ -13,7 +15,9 @@ void initMiniGit() {
 
     if (!fs::exists(minigit)) {
         fs::create_directory(minigit);
-        SetFileAttributesA(minigit.c_str(), FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM); //make it hidden and system
+        #ifdef _WIN32
+SetFileAttributes(".minigit", FILE_ATTRIBUTE_HIDDEN);
+#endif //make it hidden and system
 
       
         fs::create_directories(minigit + "/objects");
