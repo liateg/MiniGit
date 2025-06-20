@@ -6,11 +6,11 @@
 
 // Struct for index entry with new fields
 struct IndexEntry {
-    std::string lastCommitHash;      // Hash from the last commit
-    bool stagedForRemoval;           // True if marked for deletion
-    std::string branchName;          // Name of the branch where last committed
-    std::string filename;            // Name of the file
-    std::string currentHash;         // Hash of the latest staged version (used in commits)
+    std::string lastCommitHash;      
+    bool stagedForRemoval;           
+    std::string branchName;          
+    std::string filename;            
+    std::string currentHash;         
 };
 
 
