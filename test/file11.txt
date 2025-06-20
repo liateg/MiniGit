@@ -1,0 +1,6 @@
+Hello MiniGit
+newline boom
+
+
+This is the test on minigit
+testing MinGit version control features.
