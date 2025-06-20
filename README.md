@@ -1,6 +1,6 @@
 # MiniGit - A Lightweight Git-like Version Control System
 
-MiniGit is a simple, easy-to-understand version control system written in C++. It mimics the core features of Git—like adding files, committing changes, viewing history, branching, checking out commits or branches, merging, and showing diffs—all without using Git under the hood.
+MiniGit is a simple, easy-to-understand version control system written in C++. It mimics the core features of Git—like adding files, committing changes, viewing history, branching, checking out commits or branches, merging, and showing diffs—all without using Git under the hood.It gives a practical means of knowing how a version control system is built, as basic capabilities are created on top of essential data structures.
 
 ---
 
