@@ -1,15 +1,16 @@
 #ifndef COMMIT_HPP
 #define COMMIT_HPP
+
 #include <string>
 #include <unordered_map>
-#include "add.hpp"  
+#include "add.hpp"
 
 struct Commit {
     std::string hash;
     std::string parentHash;
     std::string timestamp;
     std::string message;
-    std::unordered_map<std::string, std::string> fileMap;  
+    std::unordered_map<std::string, std::string> fileMap;
 };
 
 std::string getCurrentTimestamp();
@@ -26,4 +27,4 @@ void updateBranchRef(const std::string& commitHash);
 void createcommit(const std::string& message,
                   std::unordered_map<std::string, IndexEntry>& indexMap);
 
-#endif 
+#endif // COMMIT_HPP

@@ -4,11 +4,11 @@
 #include <string>
 #include <unordered_map>
 
-using namespace std;
+std::string getCurrentBranch();
 
-string getCurrentBranch();
-string getParentHash(const string& cbranch);
+std::string getParentHash(const std::string& cbranch);
+
+// Returns a map of filename to hash for the given commit
 std::unordered_map<std::string, std::string> getCommitSnapshot(const std::string& commitHash);
 
-
-#endif
+#endif // UTILS_HPP

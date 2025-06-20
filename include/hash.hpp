@@ -5,4 +5,4 @@
 
 std::string computeHash(const std::string& input);
 
-#endif
+#endif // HASH_HPP

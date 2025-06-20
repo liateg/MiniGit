@@ -9,7 +9,7 @@
 namespace fs = std::filesystem;
 using namespace std;
 
-// Helper: load snapshot from a commit object
+// Load file-to-hash snapshot from a commit object file
 unordered_map<string, string> loadCommitSnapshot(const string& commitHash) {
     unordered_map<string, string> snapshot;
     fs::path commitPath = ".minigit/objects/" + commitHash;
@@ -40,34 +40,45 @@ unordered_map<string, string> loadCommitSnapshot(const string& commitHash) {
     return snapshot;
 }
 
-// Checkout logic
+// Checkout to a branch or commit hash
 void checkout(const string& target) {
     string commitHash;
     fs::path branchPath = ".minigit/refs/heads/" + target;
 
     if (fs::exists(branchPath)) {
-        // It's a branch, get the latest commit from it
+        // Target is a branch
         ifstream in(branchPath);
+        if (!in) {
+            cerr << "Error: Unable to read branch file " << branchPath << endl;
+            return;
+        }
         getline(in, commitHash);
         in.close();
 
-        // Update HEAD to this branch
+        // Update HEAD to point to this branch
         ofstream head(".minigit/HEAD");
+        if (!head) {
+            cerr << "Error: Unable to update HEAD.\n";
+            return;
+        }
         head << "ref: refs/heads/" << target;
         head.close();
         cout << "🔀 Switched to branch: " << target << endl;
     } else {
-        // Assume it's a direct commit hash
+        // Treat target as commit hash (detached HEAD)
         commitHash = target;
 
-        // Update HEAD to detached
         ofstream head(".minigit/HEAD");
+        if (!head) {
+            cerr << "Error: Unable to update HEAD.\n";
+            return;
+        }
         head << commitHash;
         head.close();
         cout << "🔀 Detached HEAD at: " << commitHash << endl;
     }
 
-    // Load snapshot and apply to working dir
+    // Load commit snapshot and overwrite files
     auto snapshot = loadCommitSnapshot(commitHash);
     for (const auto& [filename, blobHash] : snapshot) {
         fs::path blobPath = ".minigit/objects/" + blobHash;
@@ -79,8 +90,6 @@ void checkout(const string& target) {
 
         ofstream outFile(filename);
         outFile << blob.rdbuf();
-        blob.close();
-        outFile.close();
     }
 
     cout << "✅ Files updated to match commit " << commitHash << endl;

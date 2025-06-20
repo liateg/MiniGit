@@ -5,4 +5,4 @@
 
 void diffCommits(const std::string& commit1, const std::string& commit2);
 
-#endif
+#endif // DIFF_HPP

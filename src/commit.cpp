@@ -13,26 +13,27 @@
 namespace fs = std::filesystem;
 using namespace std;
 
-// Get the current timestamp
+// Get current timestamp as string (without newline)
 string getCurrentTimestamp() {
     auto now = chrono::system_clock::now();
     time_t now_c = chrono::system_clock::to_time_t(now);
-    string ts = ctime(&now_c); 
-    ts.pop_back(); // remove newline
+    string ts = ctime(&now_c);
+    if (!ts.empty() && ts.back() == '\n') {
+        ts.pop_back();
+    }
     return ts;
 }
 
-// Create a new commit file in objects directory
+// Create an empty commit object file
 void createCommitObject(const string& commitHash) {
     fs::path commitPath = ".minigit/objects/" + commitHash;
     ofstream commitFile(commitPath);
     if (!commitFile) {
         cerr << "Error: Could not create commit object file.\n";
     }
-    commitFile.close();
 }
 
-// Write metadata to commit object
+// Write commit metadata (commit hash, parent, timestamp, message)
 void writeCommitMetadata(const string& commitHash, const string& message,
                          const string& parentHash, const string& timestamp) {
     fs::path commitPath = ".minigit/objects/" + commitHash;
@@ -47,10 +48,9 @@ void writeCommitMetadata(const string& commitHash, const string& message,
     commitFile << "timestamp: " << timestamp << "\n";
     commitFile << "message: " << message << "\n";
     commitFile << "blobs:\n";
-    commitFile.close();
 }
 
-// Write snapshot of filenames and blob hashes
+// Write the snapshot of staged files (filename + blob hash) to the commit object
 void writeCommitSnapshot(const string& commitHash,
                          const unordered_map<string, IndexEntry>& indexMap) {
     fs::path commitPath = ".minigit/objects/" + commitHash;
@@ -65,11 +65,9 @@ void writeCommitSnapshot(const string& commitHash,
             commitFile << filename << " " << entry.lastCommitHash << "\n";
         }
     }
-
-    commitFile.close();
 }
 
-// Update HEAD to point to latest commit
+// Update current branch ref to point to the new commit hash
 void updateBranchRef(const string& commitHash) {
     string branch = getCurrentBranch();
     ofstream branchFile(".minigit/refs/heads/" + branch);
@@ -78,7 +76,6 @@ void updateBranchRef(const string& commitHash) {
         return;
     }
     branchFile << commitHash;
-    branchFile.close();
 }
 
 // Main commit creation logic
@@ -92,11 +89,11 @@ void createcommit(const string& message,
     string totalContent;
     bool hasRealChanges = false;
 
-    // 1. Build snapshot and check for actual changes
+    // Build snapshot & detect changes
     for (auto& [filename, entry] : indexMap) {
         if (entry.stagedForRemoval) {
             hasRealChanges = true;
-            continue;
+            continue; // skip deleted files
         }
 
         ifstream file(filename);
@@ -113,7 +110,7 @@ void createcommit(const string& message,
             hasRealChanges = true;
             entry.lastCommitHash = blobHash;
 
-            // Save blob if not already exists
+            // Save blob if doesn't exist
             fs::path blobPath = ".minigit/objects/" + blobHash;
             if (!fs::exists(blobPath)) {
                 ofstream out(blobPath);
@@ -124,29 +121,24 @@ void createcommit(const string& message,
         totalContent += filename + content;
     }
 
-    // 2. Prevent empty commit
+    // Prevent empty commit
     if (!hasRealChanges) {
         cout << "No changes to commit.\n";
         return;
     }
 
-    // 3. Generate commit hash
+    // Generate commit hash
     totalContent += message + timestamp + parentHash + to_string(chrono::system_clock::now().time_since_epoch().count());
     string commitHash = computeHash(totalContent);
 
-    // 4. Create commit object and metadata
+    // Create commit object and write metadata
     createCommitObject(commitHash);
     writeCommitMetadata(commitHash, message, parentHash, timestamp);
 
-    // 5. Write blob references (snapshot)
-    fs::path commitPath = ".minigit/objects/" + commitHash;
-    ofstream commitFile(commitPath, ios::app);
-    for (const auto& [filename, blobHash] : snapshot) {
-        commitFile << filename << " " << blobHash << "\n";
-    }
-    commitFile.close();
+    // Write snapshot references
+    writeCommitSnapshot(commitHash, indexMap);
 
-    // 6. Update HEAD and write index
+    // Update branch ref and write index
     updateBranchRef(commitHash);
     writeIndex(indexMap);
 

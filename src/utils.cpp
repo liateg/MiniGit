@@ -1,17 +1,16 @@
-#include <exception>
-
 #include "utils.hpp"
+
 #include <fstream>
 #include <iostream>
-#include <unordered_map>
-#include <string>
 #include <sstream>
+#include <string>
+#include <unordered_map>
 
-
+// Reads commit snapshot mapping from commit object file
 std::unordered_map<std::string, std::string> getCommitSnapshot(const std::string& commitHash) {
     std::unordered_map<std::string, std::string> snapshot;
     std::ifstream file(".minigit/objects/" + commitHash);
-    
+
     if (!file.is_open()) {
         std::cerr << "Error: Cannot open commit file " << commitHash << "\n";
         return snapshot;
@@ -25,7 +24,6 @@ std::unordered_map<std::string, std::string> getCommitSnapshot(const std::string
             blobsSection = true;
             continue;
         }
-
         if (blobsSection && !line.empty()) {
             std::istringstream iss(line);
             std::string filename, blobHash;
@@ -38,6 +36,7 @@ std::unordered_map<std::string, std::string> getCommitSnapshot(const std::string
     return snapshot;
 }
 
+// Returns the current branch name by reading .minigit/HEAD
 std::string getCurrentBranch() {
     std::ifstream head(".minigit/HEAD");
     if (!head) {
@@ -47,31 +46,28 @@ std::string getCurrentBranch() {
 
     std::string line;
     std::getline(head, line);  // e.g., "ref: refs/heads/main"
-    head.close();
 
     size_t lastSlash = line.rfind('/');
     if (lastSlash != std::string::npos && lastSlash + 1 < line.size()) {
-        return line.substr(lastSlash + 1);  // "main"
+        return line.substr(lastSlash + 1);  // e.g., "main"
     }
 
     return "";
-    
 }
-// Get the parent commit hash from the current branch
-string getParentHash(const string& cbranch) {
-    ifstream branch(".minigit/refs/heads/" + cbranch);
+
+// Returns the parent commit hash for the given branch, or 40 zero chars if none found
+std::string getParentHash(const std::string& cbranch) {
+    std::ifstream branch(".minigit/refs/heads/" + cbranch);
     if (!branch) {
-        cerr << "Error: Could not open .minigit/refs/heads/" << cbranch << "\n";
-        return string(40, '0');
+        std::cerr << "Error: Could not open .minigit/refs/heads/" << cbranch << "\n";
+        return std::string(40, '0');
     }
 
-    string line;
-    getline(branch, line); 
-    branch.close();
+    std::string line;
+    std::getline(branch, line);
 
     if (line.empty()) {
-        return string(40, '0');  // 40-char zero string all 0, the hash is 40 chars so when its empty its 40 os
-    } else {
-        return line;
+        return std::string(40, '0');  // Empty means no parent commit
     }
+    return line;
 }

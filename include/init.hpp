@@ -3,4 +3,4 @@
 
 void initMiniGit();
 
-#endif
+#endif // INIT_HPP

@@ -3,6 +3,7 @@
 #include <filesystem>
 #include "utils.hpp"
 #include "branch.hpp"
+
 namespace fs = std::filesystem;
 
 void createBranch(const std::string& branchName) {
