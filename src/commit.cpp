@@ -13,7 +13,7 @@
 namespace fs = std::filesystem;
 using namespace std;
 
-// Get current timestamp as string (without newline)
+// Get current timestamp as string (without newline)-use it for hashing
 string getCurrentTimestamp() {
     auto now = chrono::system_clock::now();
     time_t now_c = chrono::system_clock::to_time_t(now);
@@ -142,5 +142,5 @@ void createcommit(const string& message,
     updateBranchRef(commitHash);
     writeIndex(indexMap);
 
-    cout << "✅ Commit created: " << commitHash << "\n";
+    cout << "Commit created: " << commitHash << "\n";
 }

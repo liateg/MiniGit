@@ -25,9 +25,11 @@ void printUsage() {
     cout << "  add <filename>        Add file to staging area" << endl;
     cout << "  commit -m <message>   Commit staged changes" << endl;
     cout << "  log                   Show commit history" << endl;
-    cout << "  checkout <branch|commit>   Switch to branch or commit" << endl;
+    cout << "  branch <name>         Create a new branch" << endl;
+    cout << "  checkout <target>     Switch to branch or commit" << endl;
+    cout << "  merge <branch>        Merge another branch into current" << endl;
+    cout << "  diff <c1> <c2>        Compare changes between commits" << endl;
 }
-
 int main(int argc, char* argv[]) {
     cout << "Welcome to MiniGit!" << endl;
 

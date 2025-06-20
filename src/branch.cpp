@@ -20,7 +20,7 @@ void createBranch(const std::string& branchName) {
     getline(headFile, currentHash);
 
     std::ofstream newBranchFile(branchPath);
-    newBranchFile << currentHash;
+    newBranchFile << currentHash; //copy the latest commit
 
-    std::cout << "✅ Branch '" << branchName << "' created.\n";
+    std::cout << "Branch '" << branchName << "' created.\n";
 }

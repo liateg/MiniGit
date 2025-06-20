@@ -15,7 +15,7 @@ unordered_map<string, string> loadSnapshot(const string& commitHash) {
     unordered_map<string, string> snapshot;
     ifstream file(".minigit/objects/" + commitHash);
     if (!file) {
-        cerr << "❌ Could not open commit " << commitHash << endl;
+        cerr << "Could not open commit " << commitHash << endl;
         return snapshot;
     }
 

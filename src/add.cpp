@@ -9,34 +9,36 @@
 
 namespace fs = std::filesystem;
 using namespace std;
-
+//Check if the file exists and have correct extention
 bool isValidFile(const string& filename) {
     return fs::exists(filename) && fs::is_regular_file(filename);
 }
 
+//Read the the whole file
 string readFileContent(const string& filename) {
     ifstream file(filename);
     if (!file) {
         cerr << "Error: Unable to open file " << filename << endl;
         return "";
     }
-    stringstream buffer;
+    stringstream buffer; //not line by line 
     buffer << file.rdbuf();
     return buffer.str();
 }
 
+//Parse the staged file into a map, will use in commit as well
 unordered_map<string, IndexEntry> parseIndex() {
-    unordered_map<string, IndexEntry> indexMap;
+    unordered_map<string, IndexEntry> indexMap; //empty map
     ifstream indexFile(".minigit/index");
-    if (!indexFile) return indexMap;
+    if (!indexFile) return indexMap; //Nothing is staged
 
     string filename, hash, stagedFlag, branch;
     while (indexFile >> filename >> hash >> stagedFlag >> branch) {
-        IndexEntry entry;
+        IndexEntry entry;  //this is a struct from the header
         entry.lastCommitHash = hash;
         entry.stagedForRemoval = (stagedFlag == "1");
         entry.branchName = branch; 
-        indexMap[filename] = entry;
+        indexMap[filename] = entry; //mape the filename -> struct
     }
     return indexMap;
 }
@@ -59,15 +61,15 @@ void addFileToStaging(const string& filename) {
 
     string hash = computeHash(filename);
     fs::path objectsDir = ".minigit/objects";
-    if (!fs::exists(objectsDir)) fs::create_directories(objectsDir);
+    if (!fs::exists(objectsDir)) fs::create_directories(objectsDir); //chek if it hasnt been created in the init,just to be safe
 
     fs::path destPath = objectsDir / hash;
-    fs::copy_file(filename, destPath, fs::copy_options::overwrite_existing);
+    fs::copy_file(filename, destPath, fs::copy_options::overwrite_existing); //store the snapshot
 
     auto indexMap = parseIndex();
 
     if (indexMap.find(filename) != indexMap.end() &&
-        indexMap[filename].lastCommitHash == hash &&
+        indexMap[filename].lastCommitHash == hash && //if no change
         !indexMap[filename].stagedForRemoval) {
         cout << "File '" << filename << "' is already staged with no changes.\n";
         return;
