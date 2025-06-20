@@ -22,5 +22,5 @@ void createBranch(const std::string& branchName) {
     std::ofstream newBranchFile(branchPath);
     newBranchFile << currentHash;
 
-    std::cout << "✅ Branch '" << branchName << "' created.\n";
+    std::cout << "Branch '" << branchName << "' created.\n";
 }

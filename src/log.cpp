@@ -13,7 +13,6 @@ void handleLog() {
     string branch = getCurrentBranch();
     cout << "Current branch: " << branch << endl;
 
-    // Read HEAD commit hash from refs
     ifstream headFile(".minigit/refs/heads/" + branch);
     string currentHash;
     if (!getline(headFile, currentHash) || currentHash.empty() || currentHash == string(40, '0')) {

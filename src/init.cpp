@@ -1,21 +1,21 @@
 #include <exception>
 
-#include <windows.h> //for setting the minigit hidden
+#include <windows.h> 
 #include <iostream>
-#include <fstream>         // For file creation
-#include <filesystem>      // For directory creation (C++17 and above)
+#include <fstream>         
+#include <filesystem>      
 
 namespace fs = std::filesystem;
 using namespace std;
 
 void initMiniGit() {
 
-    //Create the .minigit
-    string minigit = ".minigit";  //need to make it an obj to use string methods like c_str
+    
+    string minigit = ".minigit";  
 
     if (!fs::exists(minigit)) {
         fs::create_directory(minigit);
-        SetFileAttributesA(minigit.c_str(), FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM); //make it hidden and system
+        SetFileAttributesA(minigit.c_str(), FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM); 
 
       
         fs::create_directories(minigit + "/objects");
@@ -24,14 +24,13 @@ void initMiniGit() {
 
       
         ofstream headFile(minigit + "/HEAD");
-        headFile << "ref: refs/heads/main" << endl; //default branch is main
+        headFile << "ref: refs/heads/main" << endl; 
         headFile.close();
 
         
         ofstream indexFile(minigit + "/index");
         indexFile.close();
 
-        // main branch file (empty for now)
         ofstream mainBranch(minigit + "/refs/heads/main");
         mainBranch.close();
 
