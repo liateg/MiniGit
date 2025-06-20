@@ -5,12 +5,13 @@
 
 // Struct for index entry with new fields
 struct IndexEntry {
-    std::string lastCommitHash;
-    bool stagedForRemoval;
-    std::string branchName;
-   
-
+    std::string lastCommitHash;      
+    bool stagedForRemoval;           
+    std::string branchName;          
+    std::string filename;            
+    std::string currentHash;         
 };
+
 
 // Function declarations
 bool isValidFile(const std::string& filename);

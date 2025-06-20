@@ -25,8 +25,11 @@ $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp
 
 # Link all object files into final executable
 $(EXEC): $(OBJECTS)
-	$(CXX) $(CXXFLAGS) -o $@ $^
+	$(CXX) $(CXXFLAGS) -o $@ $^ -lssl -lcrypto
 
 # Clean build directory
 clean:
 	rm -rf $(BUILD_DIR)
+# Build and test the hash function
+# build/test_hash: src/test_hash.cpp
+# 	$(CXX) $(CXXFLAGS) -o build/test_hash src/test_hash.cpp -lssl -lcrypto

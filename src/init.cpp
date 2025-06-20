@@ -1,3 +1,5 @@
+#include <exception>
+
 #include <windows.h> //for setting the minigit hidden
 #include <iostream>
 #include <fstream>         // For file creation
@@ -18,6 +20,7 @@ void initMiniGit() {
       
         fs::create_directories(minigit + "/objects");
         fs::create_directories(minigit + "/refs/heads");
+        fs::create_directories(minigit + "/commits");
 
       
         ofstream headFile(minigit + "/HEAD");
