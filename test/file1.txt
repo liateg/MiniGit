@@ -1,4 +1,4 @@
 Hello MiniGit
 newline boom
 
-
+This is the test on minigit
