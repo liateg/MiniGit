@@ -54,17 +54,25 @@ unordered_map<string, string> loadCommitSnapshot(const string& commitHash) {
     return snapshot;
 }
 
+<<<<<<< HEAD
 /**
  * Checks out a branch or commit, updating HEAD and working directory files
  * @param target Either a branch name or commit hash to check out
  */
+=======
+
+>>>>>>> eaa5a60ceb077d32ade51193906c552139a2ef50
 void checkout(const string& target) {
     string commitHash;
     fs::path branchPath = ".minigit/refs/heads/" + target;
 
     // Case 1: Checking out a branch
     if (fs::exists(branchPath)) {
+<<<<<<< HEAD
         // Read the commit hash that the branch points to
+=======
+        
+>>>>>>> eaa5a60ceb077d32ade51193906c552139a2ef50
         ifstream in(branchPath);
         if (!in) {
             cerr << "Error: Unable to read branch file " << branchPath << endl;
@@ -73,7 +81,11 @@ void checkout(const string& target) {
         getline(in, commitHash);
         in.close();
 
+<<<<<<< HEAD
         // Update HEAD to point to this branch (normal branch checkout)
+=======
+        
+>>>>>>> eaa5a60ceb077d32ade51193906c552139a2ef50
         ofstream head(".minigit/HEAD");
         if (!head) {
             cerr << "Error: Unable to update HEAD.\n";
@@ -82,9 +94,13 @@ void checkout(const string& target) {
         head << "ref: refs/heads/" << target;
         head.close();
         cout << "Switched to branch: " << target << endl;
+<<<<<<< HEAD
     } 
     // Case 2: Checking out a specific commit (detached HEAD)
     else {
+=======
+    } else {
+>>>>>>> eaa5a60ceb077d32ade51193906c552139a2ef50
         commitHash = target;
 
         // Update HEAD directly with commit hash (detached HEAD state)
@@ -98,7 +114,10 @@ void checkout(const string& target) {
         cout << "Detached HEAD at: " << commitHash << endl;
     }
 
+<<<<<<< HEAD
     // Restore working directory files to match the target commit
+=======
+>>>>>>> eaa5a60ceb077d32ade51193906c552139a2ef50
     auto snapshot = loadCommitSnapshot(commitHash);
     for (const auto& [filename, blobHash] : snapshot) {
         // Path to blob in object database
@@ -117,4 +136,8 @@ void checkout(const string& target) {
     }
 
     cout << "Files updated to match commit " << commitHash << endl;
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> eaa5a60ceb077d32ade51193906c552139a2ef50

@@ -1,7 +1,7 @@
 #include <exception>
 #include "commit.hpp"
 #include "add.hpp"       // for IndexEntry and index parsing
-#include "hash.hpp"      // for computeHash()
+#include "hash.hpp"      
 #include "utils.hpp"
 #include <fstream>
 #include <iostream>
@@ -13,7 +13,10 @@
 namespace fs = std::filesystem;
 using namespace std;
 
+<<<<<<< HEAD
 // Get current timestamp as string (without newline)-use it for hashing
+=======
+>>>>>>> eaa5a60ceb077d32ade51193906c552139a2ef50
 string getCurrentTimestamp() {
     auto now = chrono::system_clock::now();
     time_t now_c = chrono::system_clock::to_time_t(now);
@@ -33,7 +36,7 @@ void createCommitObject(const string& commitHash) {
     }
 }
 
-// Write commit metadata (commit hash, parent, timestamp, message)
+
 void writeCommitMetadata(const string& commitHash, const string& message,
                          const string& parentHash, const string& timestamp) {
     fs::path commitPath = ".minigit/objects/" + commitHash;
@@ -50,7 +53,6 @@ void writeCommitMetadata(const string& commitHash, const string& message,
     commitFile << "blobs:\n";
 }
 
-// Write the snapshot of staged files (filename + blob hash) to the commit object
 void writeCommitSnapshot(const string& commitHash,
                          const unordered_map<string, IndexEntry>& indexMap) {
     fs::path commitPath = ".minigit/objects/" + commitHash;
@@ -67,7 +69,6 @@ void writeCommitSnapshot(const string& commitHash,
     }
 }
 
-// Update current branch ref to point to the new commit hash
 void updateBranchRef(const string& commitHash) {
     string branch = getCurrentBranch();
     ofstream branchFile(".minigit/refs/heads/" + branch);
@@ -89,11 +90,11 @@ void createcommit(const string& message,
     string totalContent;
     bool hasRealChanges = false;
 
-    // Build snapshot & detect changes
+    
     for (auto& [filename, entry] : indexMap) {
         if (entry.stagedForRemoval) {
             hasRealChanges = true;
-            continue; // skip deleted files
+            continue; 
         }
 
         ifstream file(filename);
@@ -110,7 +111,7 @@ void createcommit(const string& message,
             hasRealChanges = true;
             entry.lastCommitHash = blobHash;
 
-            // Save blob if doesn't exist
+            
             fs::path blobPath = ".minigit/objects/" + blobHash;
             if (!fs::exists(blobPath)) {
                 ofstream out(blobPath);
@@ -121,24 +122,24 @@ void createcommit(const string& message,
         totalContent += filename + content;
     }
 
-    // Prevent empty commit
+    
     if (!hasRealChanges) {
         cout << "No changes to commit.\n";
         return;
     }
 
-    // Generate commit hash
+    
     totalContent += message + timestamp + parentHash + to_string(chrono::system_clock::now().time_since_epoch().count());
     string commitHash = computeHash(totalContent);
 
-    // Create commit object and write metadata
+    
     createCommitObject(commitHash);
     writeCommitMetadata(commitHash, message, parentHash, timestamp);
 
-    // Write snapshot references
+    
     writeCommitSnapshot(commitHash, indexMap);
 
-    // Update branch ref and write index
+    
     updateBranchRef(commitHash);
     writeIndex(indexMap);
 

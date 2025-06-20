@@ -10,7 +10,6 @@
 using namespace std;
 namespace fs = std::filesystem;
 
-// Load a commit's snapshot: filename → blob hash
 unordered_map<string, string> loadSnapshot(const string& commitHash) {
     unordered_map<string, string> snapshot;
     ifstream file(".minigit/objects/" + commitHash);
@@ -39,7 +38,6 @@ unordered_map<string, string> loadSnapshot(const string& commitHash) {
     return snapshot;
 }
 
-// Find all ancestors of a commit
 unordered_set<string> collectAncestors(const string& commitHash) {
     unordered_set<string> ancestors;
     string current = commitHash;
@@ -47,19 +45,23 @@ unordered_set<string> collectAncestors(const string& commitHash) {
     while (current != string(40, '0') && !current.empty()) {
         ancestors.insert(current);
         ifstream file(".minigit/objects/" + current);
+        if (!file) break;
+
+        bool foundParent = false;
         string line;
         while (getline(file, line)) {
             if (line.rfind("parent: ", 0) == 0) {
                 current = line.substr(8);
+                foundParent = true;
                 break;
             }
         }
+        if (!foundParent) break;
     }
 
     return ancestors;
 }
 
-// Find lowest common ancestor of two branches
 string findLCA(const string& current, const string& target) {
     unordered_set<string> ancestors1 = collectAncestors(current);
     string cur = target;
@@ -67,19 +69,23 @@ string findLCA(const string& current, const string& target) {
     while (cur != string(40, '0') && !cur.empty()) {
         if (ancestors1.count(cur)) return cur;
         ifstream file(".minigit/objects/" + cur);
+        if (!file) break;
+
+        bool foundParent = false;
         string line;
         while (getline(file, line)) {
             if (line.rfind("parent: ", 0) == 0) {
                 cur = line.substr(8);
+                foundParent = true;
                 break;
             }
         }
+        if (!foundParent) break;
     }
 
-    return string(40, '0'); // No common ancestor
+    return string(40, '0'); 
 }
 
-// Perform a basic three-way merge and show conflicts
 void mergeBranch(const string& targetBranch) {
     string currentBranch = getCurrentBranch();
     string currentHash = getParentHash(currentBranch);
@@ -87,7 +93,7 @@ void mergeBranch(const string& targetBranch) {
     string lca = findLCA(currentHash, targetHash);
 
     if (lca == string(40, '0')) {
-        cout << "⚠️ No common ancestor found. Aborting merge.\n";
+        cout << "No common ancestor found. Aborting merge.\n";
         return;
     }
 
@@ -101,25 +107,31 @@ void mergeBranch(const string& targetBranch) {
     for (auto& [f, _] : target) allFiles.insert(f);
 
     for (const string& file : allFiles) {
-        string baseHash = base[file];
-        string currHash = current[file];
-        string targHash = target[file];
+        string baseHash = base.count(file) ? base[file] : "";
+        string currHash = current.count(file) ? current[file] : "";
+        string targHash = target.count(file) ? target[file] : "";
 
-        if (currHash == targHash) continue; // No change
+        if (currHash == targHash) continue;
+
         if (currHash == baseHash) {
-            // Updated in target, apply change
-            string blobPath = ".minigit/objects/" + targHash;
+
+            fs::path blobPath = ".minigit/objects/" + targHash;
             ifstream in(blobPath);
+            if (!in) {
+                cerr << "Error: Could not open blob " << targHash << " for file " << file << "\n";
+                continue;
+            }
             ofstream out(file);
             out << in.rdbuf();
-            cout << "✅ Merged updated file: " << file << "\n";
+            cout << "Merged updated file: " << file << "\n";
         } else if (targHash == baseHash) {
-            // Modified only in current branch → do nothing
+            
         } else {
-            // Conflict
-            cout << "⚠️ CONFLICT: both modified " << file << "\n";
+            
+            cout << "CONFLICT: both modified " << file << "\n";
+
             ofstream out(file);
-            out << "<<<<<<< HEAD\n";
+            out << "<<<<<<< " << currentBranch << "\n";
             if (fs::exists(".minigit/objects/" + currHash)) {
                 ifstream c(".minigit/objects/" + currHash);
                 out << c.rdbuf();
@@ -133,5 +145,5 @@ void mergeBranch(const string& targetBranch) {
         }
     }
 
-    cout << "✅ Merge completed (with possible conflicts).\n";
+    cout << "Merge completed (with possible conflicts).\n";
 }

@@ -12,7 +12,6 @@ void diffCommits(const std::string& commit1, const std::string& commit2) {
     auto snap1 = getCommitSnapshot(commit1);
     auto snap2 = getCommitSnapshot(commit2);
 
-    // Collect all unique files from both commits
     std::unordered_set<std::string> allFiles;
     for (const auto& [file, _] : snap1) allFiles.insert(file);
     for (const auto& [file, _] : snap2) allFiles.insert(file);
@@ -22,13 +21,13 @@ void diffCommits(const std::string& commit1, const std::string& commit2) {
         bool in2 = snap2.count(file) > 0;
 
         if (in1 && !in2) {
-            std::cout << "🗑️  " << file << " was removed in " << commit2 << "\n";
+            std::cout << "  " << file << " was removed in " << commit2 << "\n";
         } else if (!in1 && in2) {
-            std::cout << "➕ " << file << " was added in " << commit2 << "\n";
+            std::cout << " " << file << " was added in " << commit2 << "\n";
         } else {
             // File exists in both commits
             if (snap1[file] != snap2[file]) {
-                std::cout << "✏️  " << file << " changed:\n";
+                std::cout << "  " << file << " changed:\n";
 
                 fs::path blob1 = ".minigit/objects/" + snap1[file];
                 fs::path blob2 = ".minigit/objects/" + snap2[file];

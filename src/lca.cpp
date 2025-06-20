@@ -13,7 +13,7 @@ std::string getParent(const std::string& commitHash) {
     std::string line;
     while (getline(in, line)) {
         if (line.rfind("parent:", 0) == 0) {
-            return line.substr(7); // skip "parent: "
+            return line.substr(7); 
         }
     }
     return "";
@@ -38,5 +38,5 @@ std::string findLowestCommonAncestor(const std::string& commit1, const std::stri
         }
         current = getParent(current);
     }
-    return ""; // No common ancestor found
+    return ""; 
 }

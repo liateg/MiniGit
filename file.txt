@@ -1,4 +1,0 @@
-hello
-hello from main
-hello
-hello from feature
